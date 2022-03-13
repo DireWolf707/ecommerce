@@ -2,11 +2,14 @@
     import ProductList from "$lib/ProductList.svelte";
     import devData from '../dev-data/products';
     const products = devData;
+    import axios from 'axios';
+    import { onMount } from "svelte";
+
+    onMount(async () => {
+        const data = await axios.get('http://localhost:8080');
+        console.log(data);
+    })
 </script>
-
-
-
-
 
 <h1>Welcome to Proshop</h1>
 
