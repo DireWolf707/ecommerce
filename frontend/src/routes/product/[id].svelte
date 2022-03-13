@@ -1,24 +1,27 @@
 <script>
     import Rating from "$lib/Rating.svelte";
+    import axios from 'axios';
     import { page } from '$app/stores';
-    import devData from '../../dev-data/products';
     import { onMount } from 'svelte';
 
     let loaded = false;
-    let productID;
     let product;
-    onMount(() => {
-        productID = $page.params.id;
-        product = devData.find( (p) => p._id === productID );
+
+    onMount(async () => {
+        const productID = $page.params.id;
+        const res = await axios.get(`http://localhost:8080/api/products/${productID}`);
+        product = res.data.data;
         loaded = true;
     })
 </script>
 
 <div>
     {#if loaded}
-    <a href="/">go back</a>
     <section class="text-gray-600 body-font overflow-hidden">
         <div class="container px-5 py-24 mx-auto">
+          <div class="ml-40 mb-2 hover:text-blue-400">
+            <a href="/"><i class="fa-solid fa-arrow-left"></i> go back</a>
+          </div>
           <div class="lg:w-4/5 mx-auto flex flex-wrap">
             <img alt="ecommerce" class="lg:w-1/2 w-full lg:h-auto h-64 object-cover object-center rounded" src="{product.image}">
             <div class="lg:w-1/2 w-full lg:pl-10 lg:py-6 mt-6 lg:mt-0">
@@ -31,7 +34,7 @@
               <p class="leading-relaxed">{product.description}</p>
               <hr class="my-2">
 
-              <div class="border w-1/3 rounded-b-md mx-auto mt-4">
+              <div class="border w-1/3 rounded-b-md mx-auto mt-6">
                 <div class="border-b-2 py-2 px-4">
                     <div class="flex justify-between">
                         <div>

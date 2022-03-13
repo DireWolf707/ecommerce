@@ -6,7 +6,7 @@
 <div class="border rounded-b-md p-1">
     <img src="{product.image}" alt="{product.name}">
     <div class="m-2 ">
-        <div class="font-bold mb-2" >
+        <div class="font-bold mb-2 hover:text-blue-400">
             <a href='/product/{product._id}'>{product.name}</a>
         </div>
         <Rating stars={product.rating} reviews={product.rating} />

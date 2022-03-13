@@ -1,13 +1,13 @@
 <script>
     import ProductList from "$lib/ProductList.svelte";
-    import devData from '../dev-data/products';
-    const products = devData;
     import axios from 'axios';
     import { onMount } from "svelte";
 
+    let products = [];
+
     onMount(async () => {
-        const data = await axios.get('http://localhost:8080');
-        console.log(data);
+        const res = await axios.get('http://localhost:8080/api/products');
+        products = res.data.data;
     })
 </script>
 
