@@ -3,6 +3,7 @@ import { browser } from "$app/env";
 import axios from 'axios';
 
 function createCart() {
+
     const initialData = browser && localStorage.getItem('cart') ? JSON.parse(localStorage.getItem('cart')) : [];
 
 	const { subscribe, set, update } = writable(initialData);
@@ -10,15 +11,16 @@ function createCart() {
 	return {
 		subscribe,
 		add: async (_id, _qty) => {
-			let _item = await axios.get(`http://localhost:8080/api/products/${_id}`);
+			const res = await axios.get(`http://localhost:8080/api/products/${_id}`);
+			let _item = res.data.data;
 			_item.qty = _qty;
 
 			update((items) => {
-				const existItem = items.find( item => item.id == _id );
+				const existItem = items.find( item => item._id == _id );
 				let newItems;
 				if (existItem) {
 					// overwrite qty rather than adding
-					newItems = [ ...items.map( item => (item.id == _id) ? { ...item, qty:_qty } : item ) ]
+					newItems = [ ...items.map( item => (item._id == _id) ? { ...item, qty:_qty } : item ) ]
 				}
 				else {
 					newItems = [ ...items, _item ]
@@ -27,7 +29,13 @@ function createCart() {
 				return newItems;
 			})
 		},
-		delete: () => {}
+		delete: (_id) => {
+			update((items) => {
+				const newItems = items.filter(item => item._id != _id);
+				localStorage.setItem('cart',JSON.stringify(newItems))
+				return newItems;
+			})
+		}
 	};
 }
 

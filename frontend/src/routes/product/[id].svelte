@@ -23,9 +23,13 @@
         }
     })
 
-    const addToCart = () => {
-      cart.add(product._id,qty);
-      goto('/cart');
+    const addToCart = async () => {
+      try {
+        await cart.add(product._id,qty);
+        goto('/cart');
+      } catch (e) {
+        error = e.message;
+      }
     }
 </script>
 
