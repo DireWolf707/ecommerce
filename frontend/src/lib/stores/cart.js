@@ -1,15 +1,12 @@
 import { writable } from 'svelte/store';
-import { browser } from "$app/env";
 import axios from 'axios';
 
 function createCart() {
 
-    const initialData = browser && localStorage.getItem('cart') ? JSON.parse(localStorage.getItem('cart')) : [];
-
-	const { subscribe, set, update } = writable(initialData);
+	const { subscribe, set, update } = writable(undefined);
 
 	return {
-		subscribe,
+		subscribe,set,
 		add: async (_id, _qty) => {
 			const res = await axios.get(`http://localhost:8080/api/products/${_id}`);
 			let _item = res.data.data;

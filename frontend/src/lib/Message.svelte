@@ -3,7 +3,7 @@
     export let description = "Something not ideal might be happening";
 </script>
 
-<div role="alert">
+<div role="alert" class="mx-16 my-8">
     <div class="bg-red-500 text-white font-bold rounded-t px-4 py-2">
         {title}
     </div>

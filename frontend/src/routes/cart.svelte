@@ -1,29 +1,32 @@
 <script>
     import {cart} from '$lib/stores/cart.js';
-    import Message from '$lib/Message.svelte';
-    import Loading from '$lib/Loading.svelte';
     import CartList from '$lib/CartList.svelte';
-    import { onMount, onDestroy } from 'svelte';
+    import Loading from '$lib/Loading.svelte';
+    import { onDestroy, onMount } from 'svelte';
     
     let items;
     let total;
-    let unsub;
-
-    onMount(() => {
-        unsub = cart.subscribe((_items) => {
+    let unsub = cart.subscribe((_items) => {
+        if (_items) {
             items = _items;
             let _total = 0;
             items.forEach(e => {
                 _total= _total+e.price*e.qty
             });
             total=Math.round(_total * 100)/100;
-        })
+        }
     })
 
+    onMount(() => {
+        const _items = localStorage.getItem('cart') ? JSON.parse(localStorage.getItem('cart')) : [];
+        cart.set(_items);
+    });
+
+    onDestroy(unsub);
    
 </script>
 
-{#if items}
+{#if items} 
     <div class="flex mx-8 mt-4">
         <div class="w-1/2">
             <div class="p-2">

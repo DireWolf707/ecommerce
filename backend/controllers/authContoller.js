@@ -9,6 +9,23 @@ const signToken = (id) => {
     })
 }
 
+const sendTokenCookieResponse = (user,res) => {
+    const token = signToken(user._id);
+
+    res.cookie('jwt', token, {
+        expires: new Date( Date.now() + 24*60*60*1000 ), // in ms
+        httpOnly: true,
+        secure: process.env.NODE_ENV == 'production' ,
+        sameSite: 'lax'
+    }).status(200).json({
+        status: 'success',
+        name: user.name,
+        email: user.email,
+        isAdmin: user.isAdmin,
+        id: user.id
+    })
+}
+
 export const login = asyncWrapper(async (req,res,next) => {
     const { email, password } = req.body;
     // check email and password are not undefined
@@ -22,18 +39,17 @@ export const login = asyncWrapper(async (req,res,next) => {
         throw new Error('Incorrect email or password!', 401);
     }
     // send jwt token
-    const token = signToken(user._id)
-
-    res.status(200).json({
-        status: 'success',
-        name: user.name,
-        email: user.email,
-        isAdmin: user.isAdmin,
-        id: user.id,
-        token
-    })
+    sendTokenCookieResponse(user,res);
 })
 
+export const logout = (req,res,next) => {
+    res.cookie('jwt', '', {
+        expires: new Date(Date.now()), // in ms
+        httpOnly: true
+    }).status(200).json({
+        status: 'success'
+    })
+}
 
 export const signup = asyncWrapper(async (req,res,next) => {
     const user = await User.create({
@@ -41,31 +57,58 @@ export const signup = asyncWrapper(async (req,res,next) => {
         email: req.body.email,
         password: req.body.password
     });
+    // send jwt token
+    sendTokenCookieResponse(user,res);
+})
 
-    const token = signToken(user._id)
-
-    res.status(201).json({
+export const userProfile = (req,res,next) => {
+    const user = req.user;
+    res.json({
         status: 'success',
-        token,
         name: user.name,
         email: user.email,
         isAdmin: user.isAdmin,
         id: user.id
     })
-})
+}
 
-export const userProfile = (req,res,next) => {
-    res.json(req.user)
+export const userUpdate = (req,res,next) => {
+    const user = req.user;
+    const { email, name } = req.body;
+
+    if (email != '' && name != '' ) {
+        user.email = email;
+        user.name = name;
+    } else {
+        throw Error('Invalid details') 
+    }
+
+    user.save();
+
+    sendTokenCookieResponse(user, res);
+}
+
+export const passwordUpdate = (req,res,next) => {
+    const user = req.user;
+    const { pass1, pass2 } = req.body;
+
+    if (pass1 != '' && pass1 == pass2) {
+        user.password = pass1
+    } else {
+        throw Error('password dont match')
+    }
+    
+    user.save();
+
+    sendTokenCookieResponse(user, res);
 }
 
 // auth middleware
 
 export const loginRequired = asyncWrapper(async (req,res,next) => {
     // get token
-    let token = req.headers.authorization;
-    if (token && token.startsWith('Bearer')) {
-        token =  token.split(' ')[1]
-    } else {
+    let token = req.cookies.jwt;
+    if (!token) {
         throw new Error('you are not logged in!');
     }
     // validate token 
@@ -73,14 +116,13 @@ export const loginRequired = asyncWrapper(async (req,res,next) => {
     // check if user exists
     const user = await User.findById(decoded.id).select('-password -__v -updatedAt');
     if (!user) {
-        throw new Error('user belonging to the token dont exist anymore! ', 401); 
+        throw new Error('user belonging to the token dont exist anymore! '); 
     }
     // assign user object to request
     req.user = user;
 
     next();
 })
-
 
 
 export const authorize = (...roles) => {
